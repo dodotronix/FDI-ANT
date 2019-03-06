@@ -20,7 +20,7 @@
 %
 
 function signal_out = lpass(signal_in, fs)
-  f_cut = 50e6; %150MHz
+  f_cut = 50e6; %50MHz
 
   if(f_cut > fs)
     error("The cutoff frequency is greater than sampling frequency.")
