@@ -1,5 +1,5 @@
 %
-% This function simulates output of Siglent SDG66022X generator
+% This function simulates output of redpitaya DAC
 %
 % -- S = lpass(signal_in, t)
 %      returns filtered signal (0 - 150Mhz)
@@ -11,9 +11,9 @@
 %                 ____________
 %                |            |
 %   signal_in -->|  LOW-PASS  |--> signal_out
-%		         |   FILTER   |
-%		         |  (50Mhz)   |
-%		         |____________|
+%                |   FILTER   |
+%                |  (50Mhz)   |
+%                |____________|
 %
 % need below package for proper working
 % pkg load signal
