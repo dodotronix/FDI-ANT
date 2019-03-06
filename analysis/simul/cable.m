@@ -10,7 +10,7 @@
 %      * w_length    : length of wire [m]
 %      * vf          : velocity factor [-]
 %      * attenuation : signal attenuation koeficient on wire [db/100m]
-%			            _____________
+%                       _____________
 %      	   w_length -->|             |
 %    [signal_in, t] -->|    WIRE     |--> [signal_out, t]
 %                vf -->|             |
