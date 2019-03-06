@@ -9,10 +9,10 @@
 %              t : input signal time matrix
 %      signal_out : signal output
 %                 ____________
-%		         |            |
-%	signal_in -->|  LOW-PASS  |--> signal_out
+%                |            |
+%   signal_in -->|  LOW-PASS  |--> signal_out
 %		         |   FILTER   |
-%		         |  (150Mhz)  |
+%		         |  (50Mhz)   |
 %		         |____________|
 %
 % need below package for proper working
