@@ -1,29 +1,29 @@
 %
-% This function simulates behaviour of wire without noise
+% This function simulates behaviour of cable without noise
 % 
-% -- USAGE : [signal_out, t] = wire(signal_in, t)
-%     returns delayed signal after going through wire back and forth     
+% -- USAGE : [signal_out, t] = cable(signal_in, t, gain, vf)
+%     returns delayed signal after going through cable back and forth     
 %
 % -- PARAMETERS
 %      * signal_in   : signal input
-%      * t           : signal input time vector
-%      * w_length    : length of wire [m]
+%      * t           : signal input time vector [s]
+%      * c_length    : length of the cable [m]
 %      * vf          : velocity factor [-]
-%      * attenuation : signal attenuation koeficient on wire [db/100m]
+%      * gain        : signal attenuation koeficient on cable [db/100m]
 %                       _____________
-%      	   w_length -->|             |
-%    [signal_in, t] -->|    WIRE     |--> [signal_out, t]
+%      	   c_length -->|             |
+%    [signal_in, t] -->|    CABLE    |--> [signal_out, t]
 %                vf -->|             |
 %              gain -->|_____________|
 %
 % need below package for proper working
 % pkg load signal
 
-function [signal_out, t] = wire(signal_in, t, w_length, gain, vf)
-  c = 3e8; %[m/s]
-  t_step = t(2)-t(1); %[s]
-  delay = 2*w_length/(c*vf); %[s]
-  gain_tmp = (10^(w_length*gain/(20*100))) %[m^-1]
+function [signal_out, t] = cable(signal_in, t, c_length, gain, vf)
+  c        =  3e8;                           % [m/s]
+  t_step   =  t(2)-t(1);                     % [s]
+  delay    =  2*c_length/(c*vf);             % [s]
+  gain_tmp =  (10^(c_length*gain/(20*100))); % [m^-1]
 
   % check divisibility
   if(delay < t_step)

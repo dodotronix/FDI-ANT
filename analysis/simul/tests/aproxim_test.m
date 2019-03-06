@@ -27,7 +27,7 @@ cable_gain =  -9;      %  gain of the cable [dB]
 S_forward = lpass(G, fs_analog);
 
 % cable delay
-[S_back, t_back] = wire(S_forward, t, cable_len, cable_gain, vf);
+[S_back, t_back] = cable(S_forward, t, cable_len, cable_gain, vf);
 
 % addition of signal 'S_forward' and reflected signal 'S_back'
 S_out = [S_forward, zeros(1, length(S_back)-length(S_forward))] + S_back;
