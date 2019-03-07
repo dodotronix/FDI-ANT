@@ -66,9 +66,9 @@ function [signal_out, time] = lfsrgen(bitrate_s, order_s, amp_s, f_smp_s)
 
   % check nyquist criterium
   if(f_smp_s <= 2*bitrate_s)
-    error("Sampling rate does not fulfill Niquist-Shannon theorem.")
+    error('Sampling rate does not fulfill Niquist-Shannon theorem.')
   elseif(mod(f_smp_s, bitrate_s))
-    error("Sampling frequency is not dividable by bitrate.")
+    error('Sampling frequency is not dividable by bitrate.')
   endif
 
   % create output waveform
