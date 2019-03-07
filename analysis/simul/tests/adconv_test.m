@@ -25,3 +25,5 @@ plot(t_res, adc_res)
 hold on
 plot(t, signal)
 grid on
+xlabel("t [s]")
+ylabel("U [V]")

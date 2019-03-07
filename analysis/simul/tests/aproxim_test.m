@@ -58,9 +58,14 @@ regress_spline = spline(xd_smp, xS_out_smp, xd);
 figure(1)
 subplot(2,1,1)
 plot(t_out, S_out)
+xlabel("t [s]")
+ylabel("U [V]")
 grid on
+
 subplot(2,1,2)
 plot(smp_t_out, smp_S_out)
+xlabel("t [s]")
+ylabel("U [V]")
 grid on
 
 % plot correlations (analog and digitalized signal)
@@ -68,9 +73,10 @@ figure(2)
 plot(xd, xS_out/max(xS_out))
 hold on
 stem(xd_smp, xS_out_smp/max(xS_out_smp))
-grid on
 plot(xd, regress_spline)
-hold on
+grid on
+xlabel("distance [m]")
+ylabel("correlation apmlitude [-]")
 
 % TODO polynomial regression -> use for extrapolating peaks
 %p = polyfit(d_S_add_smp, xc_smp, 14);

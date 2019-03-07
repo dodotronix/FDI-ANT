@@ -37,7 +37,11 @@ grid on
 subplot(2,1,2)
 plot(t2, G2)
 grid on
+xlabel("t [s]")
+ylabel("U [V]")
 
 figure(2)
 plot(xd, xG)
 grid on
+xlabel("distance [m]")
+ylabel("correlation amplitude [-]")
