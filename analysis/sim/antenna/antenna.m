@@ -10,10 +10,10 @@
 %      * fs          : input signal sampling frequency
 %      * imp         : wire impedance
 %
-%		              _____________
-%		             |             |
+%                 _____________
+%	               |             |
 %   signal_in -->|   ANTENNA   |--> signal_back
-%		             |_____________|
+%                |_____________|
 %
 % need below package for proper working
 % pkg load signal
