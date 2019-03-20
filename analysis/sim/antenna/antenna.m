@@ -11,7 +11,7 @@
 %      * imp         : wire impedance
 %
 %                 _____________
-%	               |             |
+%                |             |
 %   signal_in -->|   ANTENNA   |--> signal_back
 %                |_____________|
 %
