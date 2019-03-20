@@ -12,7 +12,7 @@
 %
 %		              _____________
 %		             |             |
-%       signal_in -->|   ANTENNA   |--> signal_back
+%   signal_in -->|   ANTENNA   |--> signal_back
 %		             |_____________|
 %
 % need below package for proper working
