@@ -17,11 +17,14 @@
 %
 
 function signal_out = lpfio(signal_in, fs, bw=50e6)
-
-  if(bw > fs/2)
-    error('The cutoff frequency (%d) is greater than 1/2 of DAC sampling frequency (%d).',bw, fs)
+  if (~strcmp(bw, 'none'))
+    if(bw > fs/2)
+      error('The cutoff frequency (%d) is greater than 1/2 of DAC sampling frequency (%d).',bw, fs)
+    else
+      [b, a] = butter(6, bw/fs);
+      signal_out = filter(b, a, signal_in);
+    end
   else
-    [b, a] = butter(6, bw/fs);
-    signal_out = filter(b, a, signal_in);
+    signal_out = signal_in;
   end
 end
