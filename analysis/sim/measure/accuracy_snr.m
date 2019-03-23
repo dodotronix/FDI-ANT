@@ -58,13 +58,13 @@ for n = 1:length(order)
     % meas peaks - raw
     [~, xpos] = get_position(xc, xd, th, 'none');
     len_meas = xpos(2)-xpos(1);
-    delta = (len_set-len_meas)/len_set*100;
+    delta = (len_set-len_meas);
     y = [y, delta];
 
     % meas peaks - interpolation
     [~, xpos] = get_position(xc, xd, th, 'hyper');
     len_meas = xpos(2)-xpos(1);
-    delta = (len_set-len_meas)/len_set*100;
+    delta = (len_set-len_meas);
     y1 = [y1, delta];
   end
   result = [result; y];
@@ -84,7 +84,7 @@ hold on
 plot(SNR, result1(2, :), '--', 'linewidth', 2)
 xlim([SNR(1), SNR(end)])
 
-ylabel('{\Large Odchylka vzdálenosti [%]}')
+ylabel('{\Large Odchylka vzdálenosti [m]}')
 xlabel('{\Large poměr signál/šum [dB]}')
 grid on
 

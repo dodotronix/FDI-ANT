@@ -60,13 +60,13 @@ for n = 1:length(res)
     % meas peaks - raw
     [~, xpos] = get_position(xc, xd, th, 'none');
     len_meas = xpos(2)-xpos(1);
-    delta = (len_set-len_meas)/len_set*100;
+    delta = (len_set-len_meas);
     y = [y, delta];
 
     % meas peaks - interpolation
     [~, xpos] = get_position(xc, xd, th, 'hyper');
     len_meas = xpos(2)-xpos(1);
-    delta = (len_set-len_meas)/len_set*100;
+    delta = (len_set-len_meas);
     y1 = [y1, delta];
   end
   result = [result; y];
@@ -84,20 +84,20 @@ fs = fs*1e-6;
 %hold on 
 %plot(fs, result(3, :), '--', 'linewidth', 2)
 %hold on 
-plot(fs, result1(1, :), '-o', 'linewidth', 2)
+plot(fs, result1(1, :), '--', 'linewidth', 2)
 hold on 
 plot(fs, result1(2, :), '-o', 'linewidth', 2)
 hold on 
-plot(fs, result1(3, :), '-o', 'linewidth', 2)
+plot(fs, result1(3, :), '-*', 'linewidth', 2)
 xlim([fs(1), fs(end)])
 
-ylabel('{\Large Odchylka vzdálenosti [%]}')
+ylabel('{\Large Odchylka vzdálenosti [m]}')
 xlabel('{\Large Vzorkovací frekvence [MHz]}')
 grid on
 
-%orient('landscape')
-%h = legend({'bez interpolace', 's interpolací'},'Location','northeast');
-%set (h, "fontsize", 16);
+orient('landscape')
+h = legend({'rozlišení 4 bity', 'rozlišení 8 bitů', 'rozlišení 14 bitů'},'Location','northeast');
+set (h, "fontsize", 16);
 
 %------------------------------------------------------------------------------%
 %% plot exporting setups

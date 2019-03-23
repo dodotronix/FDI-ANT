@@ -56,13 +56,13 @@ for i = 1:length(fs)
   % meas peaks - raw
   [~, xpos] = get_position(xc, xd, th, 'none');
   len_meas = xpos(2)-xpos(1);
-  delta = (len_set-len_meas)/len_set*100;
+  delta = (len_set-len_meas);
   result = [result, delta];
 
   % meas peaks - interpolation
   [~, xpos] = get_position(xc, xd, th, 'hyper');
   len_meas = xpos(2)-xpos(1);
-  delta = (len_set-len_meas)/len_set*100;
+  delta = (len_set-len_meas);
   result1 = [result1, delta];
 end
 
@@ -74,10 +74,10 @@ fs = fs*1e-6;
 plot(fs, result, '--', 'linewidth', 2)
 hold on 
 plot(fs, result1, '-o', 'linewidth', 2)
-fill([fs, fs(end), fs(1)], [result, 0, 0], 'r', 'facealpha', 0.2)
+%fill([fs, fs(end), fs(1)], [result, 0, 0], 'r', 'facealpha', 0.2)
 xlim([fs(1), fs(end)])
 
-ylabel('{\Large Odchylka vzdálenosti [%]}')
+ylabel('{\Large Odchylka vzdálenosti [m]}')
 xlabel('{\Large Vzorkovací frekvence [MHz]}')
 grid on
 
@@ -85,3 +85,16 @@ orient('landscape')
 h = legend({'bez interpolace', 's interpolací'},'Location','northeast');
 set (h, "fontsize", 16);
 
+%------------------------------------------------------------------------------%
+%% plot exporting setups
+target = '../../../doc/outputs/sim/';
+name = 'accuracy_int.tex';
+name_inc = 'accuracy_int-inc.eps';
+
+print(name, '-dtex');
+
+path = strcat(target, name);
+path_inc = strcat(target, name_inc);
+
+movefile(name, path);
+movefile(name_inc, path_inc);
