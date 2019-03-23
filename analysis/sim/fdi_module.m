@@ -5,9 +5,10 @@
 %      PARAMETERS:
 %           * waveform  :  stimulus waveform
 %           * cable_len :  cable length [m]
+%           * cable_del :  cable delay [m] (optional)
 %           * cable_att :  cable attenuation [dB/100m]
 %           * fs_dac    :  sampling frequency of D/A converter [Hz]
-%           * fs_adc    :  sampling frequency of A/D converter [Hz]
+%           * fs_analog :  samplinf frequency of "analog signal" [Hz]
 %           * bitrate   :  submitted waveform bitrate
 %           * resol     :  resolution of A/D converter [b]
 %           * term      :  termination of the cable (Open, Short, s11 file)
@@ -16,6 +17,7 @@
 %                       __________________
 %       waveform   -- >|                  |
 %       cable_len  -- >|                  |
+%       cable_del  -- >|                  |
 %       cable_att  -- >|                  |
 %       fs_dac     -- >|    FDI_MODULE    |
 %       bitrate    -- >|                  |--> [xc, xd]
@@ -33,7 +35,7 @@
 %
 
 function [xc, xd] = fdi_module(waveform, 
-                               cable_len=10, 
+                               cable_len, 
                                cable_att=9, 
                                fs_dac=125e6, 
                                dac_bw=50e6, 
@@ -41,13 +43,23 @@ function [xc, xd] = fdi_module(waveform,
                                res_adc=8, 
                                bitrate=25e6, 
                                SNR=10,
-                               term='Open')
+                               term='Open',
+                               cable_del,
+                               fs_analog)
 
   v_c       =  3e8;                      % light speed
   imp       =  50;                       % cable impedance
   v_factor  =  0.695;                    % velocity factor
   fs_adc    =  fs_dac;
-  fs_analog =  20*lcm(fs_dac, bitrate);  % calculate analog sampling frequency
+
+  if ~exist('cable_del')
+    cable_del = cable_len/(v_c*v_factor);
+    fprintf('Cable delay calculated from cable length (%.15f [s])\n', cable_del)
+  end
+
+  if ~exist('fs_analog')
+    fs_analog =  20*lcm(fs_dac, bitrate);  % calculate analog sampling frequency
+  end
 
   % repeat signal 3-times
   S2 = repeater(waveform, 3);
@@ -67,13 +79,13 @@ function [xc, xd] = fdi_module(waveform,
   %----------------------------------------------------------------------------%
   %% Cable 
 
-  if(~strcmp(term, 'Open') && ~strcmp(term, 'Short'))
+  if(exist(term, 'file'))
     
     %--------------------------------------------------------------------------%
     %% Antenna 
 
     % signal delay (function returns fixed cable length)
-    [Rx_shifted_ant, cable_len] = cable(Tx_signal_dac_noise, fs_analog, cable_len, v_factor, v_c);
+    Rx_shifted_ant = cable(Tx_signal_dac_noise, fs_analog, cable_del);
 
     % cable attenuation (forward)
     Tx_cable_ant = attenua(Rx_shifted_ant, cable_len, cable_att);
@@ -84,17 +96,19 @@ function [xc, xd] = fdi_module(waveform,
     % cable attenuation (backward)
     Rx_signal = attenua(Rx_cable_ant, cable_len, cable_att);
 
-  else
+  elseif(strcmp(term, 'Open') || strcmp(term, 'Short'))
     % signal delay
-    k = (-2*strcmp(term,'Short')+1); % invert signal phase
-    Rx_signal_shifted = k*cable(Tx_signal_dac_noise, fs_analog, cable_len, v_factor, v_c);
+    Rx_signal_shifted = cable(Tx_signal_dac_noise, fs_analog, cable_del);
+
+    if(strcmp(term, 'Short'))
+      Rx_signal_shifted = -Rx_signal_shifted;
+    end
 
     % cable attenuation 
     Rx_signal = attenua(Rx_signal_shifted, 2*cable_len, cable_att);
   end
-
   % Cable signal shift + reference signal (termination - open)
-  Rx_signal_complet = Rx_signal + Tx_signal_dac_noise; 
+  Rx_signal_complet = Rx_signal + Tx_signal_dac_noise(1:length(Rx_signal)); 
 
   %----------------------------------------------------------------------------%
   %% A/D converter 
@@ -119,10 +133,9 @@ function [xc, xd] = fdi_module(waveform,
   %----------------------------------------------------------------------------%
   %% Correlator
 
-    delta = length(Ref_data)
+    delta = length(Ref_data);
     bitw = fs_dac/bitrate;
 
     xd = [-2*bitw:delta-bitw]/fs_adc*v_c*v_factor/2;
     xc = xcorr(Rx_data_adc, Ref_data)(4*delta-2*bitw:5*delta-bitw);
-
 end
