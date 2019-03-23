@@ -13,7 +13,6 @@ phase  = s11(:, 3);
 
 %------------------------------------------------------------------------------%
 %% Plots
-
 % subplot 1
 figure(1)
 subplot(2,1,1)
@@ -25,7 +24,6 @@ grid on
 orient('landscape')
 h=get(gcf, "currentaxes");
 set(h, "fontsize", 16);
-grid on
 
 % subplot 2
 subplot(2,1,2)
@@ -38,8 +36,9 @@ grid on
 orient('landscape')
 h=get(gcf, "currentaxes");
 set(h, "fontsize", 16);
-grid on
 
+%------------------------------------------------------------------------------%
+%% plot exporting setups
 target = '../../../doc/outputs/sim/';
 name = 'antenna_s11.tex';
 name_inc = 'antenna_s11-inc.eps';
