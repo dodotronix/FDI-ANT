@@ -20,19 +20,8 @@
 % need below package for proper working
 % pkg load signal
 
-function [signal_out, l] = cable(signal_in, fs, cable_len, v_factor, v_c)
-  delay = cable_len/(v_c*v_factor); % [s]
-
-  % fix delay value if not divisible by signal period
-  delay_fix = round(delay*fs)/fs;
-  l = v_c*v_factor*delay_fix;
-
-  if(rem(delay, 1/fs))
-    warning('Closest value of submited distance used (%d) [m].\n', l);
-  endif
-
+function signal_out = cable(signal_in, fs, delay)
   % shift signal right
-  offset = 2*delay_fix*fs;
-  %signal_out = [zeros(1, offset), signal_in(1:end-offset)];
+  offset = 2*delay*fs;
   signal_out = [zeros(1, offset), signal_in(1:end-offset)];
 endfunction
