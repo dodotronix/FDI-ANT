@@ -35,6 +35,7 @@ P = [ones(1,1), zeros(1, bitrate/1e6-1)]; % f = 1e6
 
 [xc_stdr, xd_stdr] = fdi_module(S, cable_len, cable_att, fs_dac, bw_dac,
   range_adc, res_adc, bitrate,  SNR, term='Open');
+
 %------------------------------------------------------------------------------%
 %%Plot
 
@@ -48,6 +49,19 @@ xlabel('{\Large Vzdálenost [m]}')
 grid on
 
 orient('landscape')
-
 h = legend({'STDR', 'TDR'},'Location','northeast');
 set (h, "fontsize", 16);
+
+%------------------------------------------------------------------------------%
+%% plot exporting setups
+target = '../../../doc/outputs/sim/';
+name = 'compare.tex';
+name_inc = 'compare-inc.eps';
+
+print(name, '-dtex');
+
+path = strcat(target, name);
+path_inc = strcat(target, name_inc);
+
+movefile(name, path);
+movefile(name_inc, path_inc);

@@ -87,23 +87,16 @@ grid on
 h = legend({'ideální','simulace','interpolace'},'Location','northeast');
 set (h, "fontsize", 16);
 
+%------------------------------------------------------------------------------%
 %% plot exporting setups
-%orient('landscape')
-%h=get(gcf, "currentaxes");
-%set(h, "fontsize", 16);
-%grid on
+target = '../../../doc/outputs/sim/'
+name = 'peak_shape.tex'
+name_inc = 'peak_shape-inc.eps'
 
-%h = legend({'bez interpolace', 's interpolací'},'Location','northeast');
-%set (h, "fontsize", 16);
+print(name, '-dtex');
 
-%target = '../../../doc/outputs/sim/'
-%name = 'peak_shape.tex'
-%name_inc = 'peak_shape-inc.eps'
+path = strcat(target, name);
+path_inc = strcat(target, name_inc);
 
-%print(name, '-dtex');
-
-%path = strcat(target, name);
-%path_inc = strcat(target, name_inc);
-
-%movefile(name, path);
-%movefile(name_inc, path_inc);
+movefile(name, path);
+movefile(name_inc, path_inc);
