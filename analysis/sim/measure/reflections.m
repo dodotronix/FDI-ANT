@@ -61,6 +61,8 @@ hold on
 plot(xd_short, xc_short, '-o', 'linewidth', 1)
 hold on
 plot(xd_ant, xc_ant, 'o-r', 'linewidth', 1)
+hold on
+plot(d_aprox, -y, 'b', 'linewidth', 1)
 xlim([-10, 50])
 ylabel('{\Large Korelační amplituda [-]}')
 xlabel('{\Large Vzdálenost [m]}')
@@ -76,14 +78,14 @@ h = legend({'teoretický odhad', 'rozpojení', 'zkrat', 'anténa'},'Location','n
 set (h, "fontsize", 16);
 
 %% Generate Latex
-%target = '../../../doc/outputs/sim/'
-%name = 'reflections.tex'
-%name_inc = 'reflections-inc.eps'
+target = '../../../doc/outputs/sim/'
+name = 'reflections.tex'
+name_inc = 'reflections-inc.eps'
 
-%print(name, '-dtex');
+print(name, '-dtex');
 
-%path = strcat(target, name);
-%path_inc = strcat(target, name_inc);
+path = strcat(target, name);
+path_inc = strcat(target, name_inc);
 
-%movefile(name, path);
-%movefile(name_inc, path_inc);
+movefile(name, path);
+movefile(name_inc, path_inc);
