@@ -40,28 +40,32 @@ P = [ones(1,1), zeros(1, bitrate/1e6-1)]; % f = 1e6
 %%Plot
 
 figure(1)
-[~, y1, y2] = plotyy(xd_tdr, xc_stdr(1:length(xd_tdr)), xd_tdr, xc_tdr);
-set(y1,'linewidth',3, 'linestyle', '-');
-set(y2,'linewidth',3, 'linestyle', '-.');
+[ax, y1, y2] = plotyy(xd_tdr, xc_stdr(1:length(xd_tdr)), xd_tdr, xc_tdr);
+set(y1,'linewidth',2, 'linestyle', '-');
+set(y2,'linewidth',2, 'linestyle', '-.');
 
-ylabel('{\Large Korelační amplituda [-]}')
-xlabel('{\Large Vzdálenost [m]}')
+ylabel('{Korelační amplituda [-]}')
+xlabel('{Vzdálenost [m]}')
 grid on
 
 orient('landscape')
 h = legend({'STDR', 'TDR'},'Location','northeast');
 set (h, "fontsize", 16);
+set (ax(1),'fontsize', 20, 'ycolor', 'k');
+set (ax(2),'fontsize', 20, 'ycolor', [0.8 0 0.01]);
+set(y1, 'color', 'black')
+set(y2, 'color', [0.5 0 0.01])
 
 %------------------------------------------------------------------------------%
 %% plot exporting setups
-target = '../../../doc/outputs/sim/';
-name = 'compare.tex';
-name_inc = 'compare-inc.eps';
+%target = '../../../doc/outputs/sim/';
+%name = 'compare.tex';
+%name_inc = 'compare-inc.eps';
 
-print(name, '-dtex');
+%print(name, '-dtex');
 
-path = strcat(target, name);
-path_inc = strcat(target, name_inc);
+%path = strcat(target, name);
+%path_inc = strcat(target, name_inc);
 
-movefile(name, path);
-movefile(name_inc, path_inc);
+%movefile(name, path);
+%movefile(name_inc, path_inc);
