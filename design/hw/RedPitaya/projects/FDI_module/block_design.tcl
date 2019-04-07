@@ -14,8 +14,16 @@ source projects/$project_name/basic_red_pitaya_bd.tcl
 # IP cores
 #-------------------------------------------------------------------------------
 
+set_property -dict [list CONFIG.NUM_MI {3}] [get_bd_cells ps7_0_axi_periph]
+
 # GPIO_0
 set_property -dict [list CONFIG.C_ALL_INPUTS_2 {1}] [get_bd_cells axi_gpio_0]
+
+# GPIO_1
+startgroup
+create_bd_cell -type ip -vlnv xilinx.com:ip:axi_gpio axi_gpio_1
+set_property -dict [list CONFIG.C_ALL_OUTPUTS {1}] [get_bd_cells axi_gpio_1]
+endgroup
 
 # AXI BRAM Reader
 startgroup
@@ -62,12 +70,27 @@ connect_bd_net [get_bd_pins axis_daq_0/aresetn] [get_bd_pins axi_bram_reader_0/s
 connect_bd_intf_net [get_bd_intf_pins blk_mem_gen_0/BRAM_PORTA] [get_bd_intf_pins axis_daq_0/BRAM_PORTA]
 connect_bd_intf_net [get_bd_intf_pins blk_mem_gen_0/BRAM_PORTB] [get_bd_intf_pins axi_bram_reader_0/BRAM_PORTA]
 
+# GPIO BLOCK
+connect_bd_net [get_bd_pins axi_gpio_0/s_axi_aclk] [get_bd_pins axi_gpio_1/s_axi_aclk]
+connect_bd_net [get_bd_pins axi_gpio_0/s_axi_aresetn] [get_bd_pins axi_gpio_1/s_axi_aresetn]
+
+
+# DAQ @ Signal Generator (meas_flag input)
+connect_bd_net [get_bd_pins axis_red_pitaya_dac_0/tx_flag_o] [get_bd_pins axis_daq_0/meas_flag_i]
+
+# GPIO_1 @ Signal Generator (tx_cfg input)
+connect_bd_net [get_bd_pins axi_gpio_1/gpio_io_o] [get_bd_pins axis_red_pitaya_dac_0/tx_cfg_i]
+
+# 3th AXI master @ GPIO_1
+connect_bd_intf_net [get_bd_intf_pins ps7_0_axi_periph/M02_AXI] [get_bd_intf_pins axi_gpio_1/S_AXI]
+
+
 #-------------------------------------------------------------------------------
 # Hierarchies
 #-------------------------------------------------------------------------------
 
 group_bd_cells SignalGenerator [get_bd_cells axis_red_pitaya_dac_0] [get_bd_cells dds_compiler_0] [get_bd_cells clk_wiz_0]
-group_bd_cells GPIO [get_bd_cells axi_gpio_0]
+group_bd_cells GPIO [get_bd_cells axi_gpio_0] [get_bd_cells axi_gpio_1]
 group_bd_cells PS7 [get_bd_cells processing_system7_0] [get_bd_cells rst_ps7_0_125M] [get_bd_cells ps7_0_axi_periph]
 group_bd_cells DataAcquisition [get_bd_cells axis_red_pitaya_adc_0] [get_bd_cells signal_split_0]
 group_bd_cells DAQ [get_bd_cells blk_mem_gen_0] [get_bd_cells axi_bram_reader_0] [get_bd_cells axis_daq_0]
@@ -76,9 +99,12 @@ group_bd_cells DAQ [get_bd_cells blk_mem_gen_0] [get_bd_cells axi_bram_reader_0]
 # Addresses
 #-------------------------------------------------------------------------------
 
+assign_bd_address
 set_property offset 0x40000000 [get_bd_addr_segs {PS7/processing_system7_0/Data/SEG_axi_bram_reader_0_reg0}]
-set_property range 4K [get_bd_addr_segs {PS7/processing_system7_0/Data/SEG_axi_gpio_0_Reg}]
 set_property range 256K [get_bd_addr_segs {PS7/processing_system7_0/Data/SEG_axi_bram_reader_0_reg0}]
+
+set_property offset 0x41200000 [get_bd_addr_segs {PS7/processing_system7_0/Data/SEG_axi_gpio_1_Reg}]
+set_property range 4K [get_bd_addr_segs {PS7/processing_system7_0/Data/SEG_axi_gpio_1_Reg}]
 #-------------------------------------------------------------------------------
 # Reconfigure appearence
 #-------------------------------------------------------------------------------
