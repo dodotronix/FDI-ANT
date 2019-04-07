@@ -23,16 +23,19 @@ module axis_red_pitaya_dac #
   input  wire [AXIS_TDATA_WIDTH-1:0] s_axis_tdata,
   input  wire                        s_axis_tvalid,
 
+  input wire [32:0]                 lfsr_cfg,
   output wire                       lfsr_flag
 );
 
   wire lfsr_sig;
   
-  lfsr #(.width_p(3), .mask_p(3'b110)) lfsr_inst
-  (
+  mul_lfsr inst_mul_lfsr(
     .clk(aclk),
-    .srst(1'b0),
-    .en(1'b1),
+    .srst(lfsr_cfg[19]),
+    .en(en),
+    .sel_div_i(lfsr_cfg[7:0]),
+    .rep_i(lfsr_cfg[10:8]),
+    .order_i(lfsr_cfg[18:11]),
     .flag_o(lfsr_flag),
     .sig_o(lfsr_sig)
   );
