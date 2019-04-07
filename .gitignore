@@ -2,3 +2,8 @@ octave-workspace
 *.tex
 *.pdf
 *.eps
+*.jou
+*.log
+*.str
+design/hw/RedPitaya/tmp
+design/hw/RedPitaya/.Xil
