@@ -31,6 +31,7 @@ module axis_daq #
   // System signals
   input  wire                           aclk,
   input  wire                           aresetn,
+  input  wire                           meas_flag_i,
 
   // DAQ status/control (AXI Slave)
   input  wire [31:0]                    daq_control,
