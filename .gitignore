@@ -5,5 +5,6 @@ octave-workspace
 *.jou
 *.log
 *.str
+*.o
 design/hw/RedPitaya/tmp
 design/hw/RedPitaya/.Xil
