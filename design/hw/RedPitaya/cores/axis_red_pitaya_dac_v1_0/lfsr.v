@@ -1,10 +1,10 @@
 `timescale 1ns / 1ps
-/*-----------------------------------------------------------------------------
+/*------------------------------------------------------------------------------
  * TODO LICENCE
  * created by: dodotronix | BUT | BRNO 2019
  *
  * Basic lfsr generator
------------------------------------------------------------------------------*/
+------------------------------------------------------------------------------*/
 
 module lfsr # 
 (
@@ -22,6 +22,7 @@ module lfsr #
 );
 
   localparam BIT_CLEAR = 1'b0;
+  localparam BIT_SET = 1'b1;
 
   //edge detector setup
   reg en_last_r = BIT_CLEAR; 
@@ -41,59 +42,71 @@ module lfsr #
   //sequence repetition counter setup
   localparam REP_CNT_CLEAR = 3'b001;
   reg [2:0] rep_cnt_r = REP_CNT_CLEAR;
-  
-  //edge detector (rising edge)
+
+
+  // edge-detector
   always @ (posedge clk)
   begin
     en_last_r <= en;
-    if(~en_last_r && en) begin
-      pos <= 1'b1;
+    if(~en_last_r & en) begin
+      pos <= BIT_SET;
+    end
+    else begin
+      if(div_clk_r) begin
+        if(rep_cnt_r == rep_i) begin
+          if((result_r == LFSR_CLEAR) && busy_r) begin
+            pos <= BIT_CLEAR;
+          end
+        end
+      end
     end
   end
-
-  //prescaler
+      
+  //Clock enabling (prescaler)
   always @ (posedge clk)
   begin
-    if(srst == 1) begin
+    if(cnt_r == sel_div_i) begin
+      div_clk_r <= 1'b1;
       cnt_r <= CNT_CLEAR;
     end
     else begin
-      if(cnt_r == sel_div_i) begin
-        div_clk_r <= ~div_clk_r;
-        cnt_r <= CNT_CLEAR;
-      end
-      else begin
-        cnt_r <= cnt_r + 1;
-      end
+      cnt_r <= cnt_r + 1;
+      div_clk_r <= BIT_CLEAR;
     end
   end
 
   //lfsr counter
-  always @ (posedge div_clk_r)
+  always @ (posedge clk)
   begin
-    if(srst == 1) begin
+    if(srst) begin
+      busy_r <= BIT_CLEAR;
       result_r <= LFSR_CLEAR;
       rep_cnt_r <= REP_CNT_CLEAR;
-      busy_r <= BIT_CLEAR;
     end
     else begin
-      if(pos == 1) begin
-        busy_r <= 1'b1;
-        feedback_r = ^~(result_r & mask_p);
-        result_r <= {result_r[width_p-2:0], feedback_r};
+      if(pos) begin
+        if(div_clk_r) begin
+          busy_r <= BIT_SET;
+          result_r <= {result_r[width_p-2:0], feedback_r};
 
-        if(result_r == LFSR_CLEAR && (busy_r == 1)) begin
-          rep_cnt_r <= rep_cnt_r + 1;
-
-          if(rep_cnt_r == rep_i) begin
-            busy_r <= BIT_CLEAR;
-            pos <= 1'b0;
-            rep_cnt_r <= REP_CNT_CLEAR;
+          if((result_r == LFSR_CLEAR) && busy_r) begin
+            if(rep_cnt_r == rep_i) begin
+              busy_r <= BIT_CLEAR;
+              rep_cnt_r <= REP_CNT_CLEAR;
+            end
+            else begin
+              rep_cnt_r <= rep_cnt_r + 1;
+            end
           end
-
         end
       end
     end
+  end
+
+  //lfsr feedback
+  always @*
+  begin
+    feedback_r <= ^~(result_r & mask_p);
   end
 
   assign sig_o = result_r[width_p-1]; 

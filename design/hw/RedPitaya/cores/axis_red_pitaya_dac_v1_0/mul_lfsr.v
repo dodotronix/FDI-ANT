@@ -16,7 +16,7 @@ module mul_lfsr
   input en,
   input [7:0] sel_div_i,
   input [2:0] rep_i,
-  input [7:0] order_i,
+  input [3:0] order_i,
   output flag_o,
   output sig_o
 );

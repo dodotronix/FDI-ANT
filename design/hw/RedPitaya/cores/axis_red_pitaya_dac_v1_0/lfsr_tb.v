@@ -12,22 +12,23 @@ module lfsr_tb();
   reg clk;
   reg srst;
   reg en;
-  wire flag_o; //?
+  wire flag_o;
   wire sig_o;
+  reg flag_old = 1'b0;
 
   lfsr #(.width_p(3), .mask_p(3'b110)) DUT (
     .clk(clk),
     .srst(srst),
     .en(en),
-    .sel_div_i(8'b00000100),
+    .sel_div_i(8'b00000101),
     .rep_i(3'b011),
     .flag_o(flag_o),
     .sig_o(sig_o)
   );
 
   initial begin
-      clk = 1'b0;
-      forever #10 clk = ~clk; // generate a clock
+    clk = 1'b0;
+    forever #10 clk = ~clk; // generate a clock
   end
 
   initial begin
@@ -36,18 +37,15 @@ module lfsr_tb();
     #100;
     en <= 1'b1;
     srst <= 1'b0;
-    //#50;
-    //en <= 1'b0;
-    
-    #1000
+  end
 
-    //en <= 1'b1;
-    //#50;
-    //en <= 1'b0;
-
-    #1000
-
-    $finish;
+  always @ (posedge clk)
+  begin
+    flag_old <= flag_o;
+    if(~flag_o & flag_old) begin
+      $display("simulation end");
+      $finish;
+    end
   end
 
 endmodule

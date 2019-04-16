@@ -28,20 +28,21 @@ module axis_red_pitaya_dac #
 );
 
   wire lfsr_sig;
-  
+
   mul_lfsr inst_mul_lfsr(
     .clk(aclk),
-    .srst(tx_cfg_i[19]),
-    .en(en),
+    .srst(tx_cfg_i[15]),
+    .en(tx_cfg_i[14]),
     .sel_div_i(tx_cfg_i[7:0]),
     .rep_i(tx_cfg_i[10:8]),
-    .order_i(tx_cfg_i[18:11]),
+    .order_i(tx_cfg_i[13:11]),
     .flag_o(tx_flag_o),
     .sig_o(lfsr_sig)
   );
 
-  localparam fullp = 14'b00001111111111; //930 mV
-  localparam fulln = 14'b10001111111111; //-930 mV
+  localparam fullp = 14'b00000000000000; //930 mV
+  localparam fulln = 14'b11111111111111; //-930 mV
+  localparam zero = 14'b10000000000000; // 0 mV
 
   reg [DAC_DATA_WIDTH-1:0] int_dat_a_reg;
   reg [DAC_DATA_WIDTH-1:0] int_dat_b_reg;
@@ -62,13 +63,24 @@ module axis_red_pitaya_dac #
       int_dat_b_reg <= {(DAC_DATA_WIDTH){1'b0}};
     end
     else begin
-      if(lfsr_sig) begin
-        int_dat_a_reg <= fullp;
+      int_dat_a_reg <= zero;
+
+      if(tx_flag_o) begin
+        if(lfsr_sig) begin
+          int_dat_a_reg <= fullp;
+        end
+        else begin
+          int_dat_a_reg <= fulln;
+        end
+      end
+
+      if(tx_flag_o) begin
+        int_dat_b_reg <= fullp; 
       end
       else begin
-        int_dat_a_reg <= fulln;
+        int_dat_b_reg <= fulln;  
       end
-      int_dat_b_reg <= {int_dat_b_wire[DAC_DATA_WIDTH-1], ~int_dat_b_wire[DAC_DATA_WIDTH-2:0]};
+      //int_dat_b_reg <= {int_dat_b_wire[DAC_DATA_WIDTH-1], ~int_dat_b_wire[DAC_DATA_WIDTH-2:0]};
     end
     int_rst_reg <= ~locked | ~s_axis_tvalid;
   end
