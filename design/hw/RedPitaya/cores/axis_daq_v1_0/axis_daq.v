@@ -1,8 +1,8 @@
 `timescale 1 ns / 1 ps
 
-// ====================================================================================
+// -----------------------------------------------------------------------------
 // Simple DAQ
-// ====================================================================================
+// -----------------------------------------------------------------------------
 //
 //  daq_control:
 //      [31:16]     daq_threshold_reg
@@ -14,12 +14,8 @@
 //      [0]         daq_done_reg
 //
 //
-//
-//
-//
 // BRAM PORTA for writing
-// ====================================================================================
-// ====================================================================================
+// -----------------------------------------------------------------------------
 
 module axis_daq #
 (
@@ -49,8 +45,7 @@ module axis_daq #
   output wire                           bram_porta_we
 );
 
-// ====================================================================================
-// ====================================================================================
+//------------------------------------------------------------------------------
 
   reg [3:0] st_reg, st_reg_next;            // main FSM
 
@@ -60,7 +55,7 @@ module axis_daq #
   localparam st_triggered        = 4'b0011;
   localparam st_done             = 4'b0100;
 
-// ------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
   reg daq_done_reg;                             // DAQ status
 
@@ -73,61 +68,47 @@ module axis_daq #
   reg [BRAM_ADDR_WIDTH-1:0] cnt_samples;
 
 
-  reg daq_triggered_reg;
+  //reg daq_triggered_reg;
   reg daq_full_reg;
   reg rst_cnt_samples;
   reg en_cnt_samples;
   reg pretriger_done_reg;
 
-
-
-
   wire daq_enable;
   wire signed [15:0] s_axis_tdata_i;
 
-
-
-// ====================================================================================
+//------------------------------------------------------------------------------
 
   localparam C_CNT_SAMPLES_FULL = 16'hFFFF;
   localparam C_delimiter = 16'h7FFF;
 
-
-// ====================================================================================
-// ====================================================================================
+//------------------------------------------------------------------------------
 
   // module outputs
-  assign daq_status         = { 31'd0 , daq_done_reg };
-  assign s_axis_tready      = 1'b1;
-  assign bram_porta_clk     = aclk;
-  assign bram_porta_addr    = bram_addr_reg;
-  assign bram_porta_wrdata  = bram_data_reg;
-//assign bram_porta_wrdata  = { bram_data_reg[7:0] , bram_data_reg[15:8] };            // byte swap (big endien)
+  assign daq_status        =  { 31'd0 , daq_done_reg };
+  assign s_axis_tready     =  1'b1;
+  assign bram_porta_clk    =  aclk;
+  assign bram_porta_addr   =  bram_addr_reg;
+  assign bram_porta_wrdata =  bram_data_reg;
   
-  
-  assign bram_porta_we      = bram_wr_reg;
+  assign bram_porta_we = bram_wr_reg;
 
   // internal assignments
-  assign daq_enable         = daq_control[0];
+  assign daq_enable = daq_control[0];
+  assign s_axis_tdata_i = s_axis_tdata[15:0];
 
-  assign s_axis_tdata_i     = s_axis_tdata[15:0];
-
-// ====================================================================================
-
-  // ----------------------------------------------------------------------------------
-  // main FSM
-  // ----------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+// main FSM
+//------------------------------------------------------------------------------
 
   // state register
   always @(posedge aclk)
   begin
-    if (~aresetn)               // synchronous reset
+    if (~aresetn) // synchronous reset
       st_reg <= st_idle;
     else
       st_reg <= st_reg_next;
   end
-
-  // ----------------------------------------------------------------------------------
 
   // next state logic
   always @*
@@ -137,28 +118,22 @@ module axis_daq #
 
     case(st_reg)
       // ARM must activate DAQ by writing '1' to daq_control[0]
-      st_idle:              if(daq_enable == 1'b1)
-                                st_reg_next <= st_pretrigger;
-
+      st_idle: if(daq_enable == 1'b1)
+                  st_reg_next <= st_pretrigger;
       // wait until pretrigger data are buffered
-      st_pretrigger:        if(pretriger_done_reg == 1'b1)
-                                st_reg_next <= st_wait_for_trigger;
-
+      st_pretrigger: if(pretriger_done_reg == 1'b1)
+                        st_reg_next <= st_wait_for_trigger;
       // wait for trigger event
-      st_wait_for_trigger:  if(daq_triggered_reg == 1'b1)
-                                st_reg_next <= st_triggered;
-
+      st_wait_for_trigger: if(meas_flag_i == 1'b1)
+                              st_reg_next <= st_triggered;
       // fill the whole buffer
-      st_triggered:         if(daq_full_reg == 1'b1)
-                                st_reg_next <= st_done;
-
+      st_triggered: if(daq_full_reg == 1'b1)
+                       st_reg_next <= st_done;
       // wait until ARM reads data from BRAM (confirmed by writing '0' to daq_control[0])
-      st_done:              if(daq_enable == 1'b0)
-                                st_reg_next <= st_idle;
+      st_done: if(daq_enable == 1'b0)
+                  st_reg_next <= st_idle;
     endcase;
   end
-
-  // ----------------------------------------------------------------------------------
 
   // output decoder (registered)
   always @(posedge aclk)
@@ -172,41 +147,43 @@ module axis_daq #
     end
 
     else begin
-
       // default assignments
       rst_cnt_samples         <=  1'b0;
       en_cnt_samples          <=  1'b0;
       daq_done_reg            <=  1'b0;
 
       case(st_reg)
-        st_idle:              begin
-                                rst_cnt_samples <= 1'b1;
-                                if (daq_enable == 1'b1)
-                                  // latch trigger threshold value
-                                  daq_threshold_reg  <= daq_control[31:16];
-                                  daq_pretrigger_reg <= daq_control[15:1];
-                              end
+        st_idle: begin
+        rst_cnt_samples <= 1'b1;
 
-        st_pretrigger:        en_cnt_samples <= 1'b1;
-                              
-        st_wait_for_trigger:  en_cnt_samples <= 1'b0;
+        if (daq_enable == 1'b1)
+          // latch trigger threshold value
+          daq_threshold_reg  <= daq_control[31:16];
+          daq_pretrigger_reg <= daq_control[15:1];
+        end
 
-        st_triggered:         en_cnt_samples <= 1'b1;
+        st_pretrigger:
+          en_cnt_samples <= 1'b1;
 
-        st_done:              begin
-                                daq_done_reg <= 1'b1;
-                                rst_cnt_samples <= 1'b1;
-                              end
+        st_wait_for_trigger:
+          en_cnt_samples <= 1'b0;
 
+        st_triggered:
+          en_cnt_samples <= 1'b1;
+
+        st_done: begin
+          daq_done_reg <= 1'b1;
+          rst_cnt_samples <= 1'b1;
+        end
       endcase;
     end
   end
 
 
 
-  // ----------------------------------------------------------------------------------
-  // BRAM address generator
-  // ----------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+// BRAM address generator
+//------------------------------------------------------------------------------
 
   always @(posedge aclk)
   begin
@@ -217,90 +194,64 @@ module axis_daq #
         bram_addr_reg <= bram_addr_reg + 1;
   end
 
-
-
-  // ----------------------------------------------------------------------------------
-  // BRAM data write
-  // ----------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+// BRAM data write
+//------------------------------------------------------------------------------
 
   always @(posedge aclk)
   begin
     // default assignments
-    bram_wr_reg             <=  1'b0;
-    bram_data_reg           <= 32'b0;
+    bram_wr_reg <=  1'b0;
+    bram_data_reg <= 32'b0;
 
     case(st_reg)
-      st_idle:              bram_wr_reg <= 1'b0;
+      st_idle: bram_wr_reg <= 1'b0;
 
-      st_pretrigger:        if (s_axis_tvalid == 1'b1) begin
-                              bram_wr_reg <= 1'b1;
-                              bram_data_reg <= s_axis_tdata_i;
-                            end
+      st_pretrigger: if (s_axis_tvalid == 1'b1) begin
+                      bram_wr_reg <= 1'b1;
+                      bram_data_reg <= s_axis_tdata_i;
+                     end
 
       st_wait_for_trigger:  if (s_axis_tvalid == 1'b1) begin
                               bram_wr_reg <= 1'b1;
                               bram_data_reg <= s_axis_tdata_i;
                             end
 
-      st_triggered:         if (s_axis_tvalid == 1'b1) begin
-                              if (daq_full_reg == 1'b1) begin
-                                  bram_wr_reg <= 1'b1;
-                                  bram_data_reg <= C_delimiter;   // mark last position in the buffer
-                              end
-                              else begin
-                                  bram_wr_reg <= 1'b1;
-                                  bram_data_reg <= s_axis_tdata_i;
-                              end
-                            end
+      st_triggered: if (s_axis_tvalid == 1'b1) begin
+                      if (daq_full_reg == 1'b1) begin
+                        bram_wr_reg <= 1'b1;
+                        bram_data_reg <= C_delimiter;   // mark last position in the buffer
+                      end
+                      else begin
+                        bram_wr_reg <= 1'b1;
+                        bram_data_reg <= s_axis_tdata_i;
+                      end
+                    end
 
-      st_done:              bram_wr_reg <= 1'b0;
-
+      st_done: bram_wr_reg <= 1'b0;
     endcase;
   end
 
 
-  // ----------------------------------------------------------------------------------
-  // trigger comparator
-  // ----------------------------------------------------------------------------------
-
-
-  always @(posedge aclk)
-  begin
-    if (~aresetn)
-      daq_triggered_reg      <= 1'b0;
-    else
-
-      daq_triggered_reg      <= 1'b0;
-
-      if (s_axis_tvalid == 1'b1)
-        if (s_axis_tdata_i >= daq_threshold_reg)
-          daq_triggered_reg  <= 1'b1;
-  end
-
-
-
-  // ----------------------------------------------------------------------------------
-  // sample counter, pretrigger, buffer full
-  // ----------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+// sample counter, pretrigger, buffer full
+//------------------------------------------------------------------------------
 
   always @(posedge aclk)
   begin
-    if (~aresetn) begin               // synchronous reset
+    if (~aresetn) begin // synchronous reset
       cnt_samples        <= 1'b0;
       pretriger_done_reg <= 1'b0;
       daq_full_reg       <= 1'b0;
     end
     else begin
-
       // Default assignment
       pretriger_done_reg <= 1'b0;
       daq_full_reg       <= 1'b0;
 
-
       // pretrigger buffer level reached
       if (cnt_samples == daq_pretrigger_reg)
         pretriger_done_reg <= 1'b1;
-
 
       // counter reset
       if (rst_cnt_samples == 1'b1)
@@ -312,11 +263,9 @@ module axis_daq #
       // full buffer
       if (cnt_samples == C_CNT_SAMPLES_FULL)
         daq_full_reg <= 1'b1;
-
     end
   end
 
 
-// ====================================================================================
 endmodule
-// ====================================================================================
+//------------------------------------------------------------------------------
