@@ -8,4 +8,4 @@ octave-workspace
 *.o
 design/hw/RedPitaya/tmp
 design/hw/RedPitaya/.Xil
-design/sw/Interface/__pycache__
+*.pyc
