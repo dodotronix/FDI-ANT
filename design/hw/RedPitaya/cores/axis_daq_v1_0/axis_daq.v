@@ -94,7 +94,8 @@ module axis_daq #
   assign bram_porta_we = bram_wr_reg;
 
   // internal assignments
-  assign daq_enable = daq_control[0];
+  //assign daq_enable = daq_control[0];
+  assign daq_enable = meas_flag_i;
   assign s_axis_tdata_i = s_axis_tdata[15:0];
 
 //------------------------------------------------------------------------------
@@ -159,7 +160,7 @@ module axis_daq #
         if (daq_enable == 1'b1)
           // latch trigger threshold value
           daq_threshold_reg  <= daq_control[31:16];
-          daq_pretrigger_reg <= daq_control[15:1];
+          daq_pretrigger_reg <= 15'b0;
         end
 
         st_pretrigger:
