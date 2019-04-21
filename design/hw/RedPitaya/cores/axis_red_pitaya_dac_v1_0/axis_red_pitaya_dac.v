@@ -40,9 +40,9 @@ module axis_red_pitaya_dac #
     .sig_o(lfsr_sig)
   );
 
-  localparam fullp = 14'b00000000000000; //930 mV
-  localparam fulln = 14'b11111111111111; //-930 mV
-  localparam zero = 14'b10000000000000; // 0 mV
+  localparam fullp = 14'b00111111111111; // 0.5 V
+  localparam fulln = 14'b10111111111111; //-0.5 V
+  localparam zero = 14'b10000000000000;  // 0 V
 
   reg [DAC_DATA_WIDTH-1:0] int_dat_a_reg;
   reg [DAC_DATA_WIDTH-1:0] int_dat_b_reg;
