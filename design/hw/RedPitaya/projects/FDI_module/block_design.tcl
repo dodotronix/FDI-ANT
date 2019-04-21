@@ -84,7 +84,7 @@ connect_bd_net [get_bd_pins axi_gpio_1/gpio_io_o] [get_bd_pins axis_red_pitaya_d
 # 3th AXI master @ GPIO_1
 connect_bd_intf_net [get_bd_intf_pins ps7_0_axi_periph/M02_AXI] [get_bd_intf_pins axi_gpio_1/S_AXI]
 
-
+# add M02 clock connect
 #-------------------------------------------------------------------------------
 # Hierarchies
 #-------------------------------------------------------------------------------
@@ -108,4 +108,9 @@ set_property range 4K [get_bd_addr_segs {PS7/processing_system7_0/Data/SEG_axi_g
 #-------------------------------------------------------------------------------
 # Reconfigure appearence
 #-------------------------------------------------------------------------------
+
+# connect clock for AXI_M02
+apply_bd_automation -rule xilinx.com:bd_rule:clkrst -config {Clk "/PS7/processing_system7_0/FCLK_CLK0 (125 MHz)" }  [get_bd_pins PS7/ps7_0_axi_periph/M02_ACLK]
+
+# fancy layout
 regenerate_bd_layout
