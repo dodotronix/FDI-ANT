@@ -50,10 +50,8 @@ module axis_daq #
   reg [3:0] st_reg, st_reg_next;            // main FSM
 
   localparam st_idle             = 4'b0000;
-  localparam st_pretrigger       = 4'b0001;
-  localparam st_wait_for_trigger = 4'b0010;
-  localparam st_triggered        = 4'b0011;
-  localparam st_done             = 4'b0100;
+  localparam st_triggered        = 4'b0001;
+  localparam st_done             = 4'b0010;
 
 //------------------------------------------------------------------------------
 
@@ -64,7 +62,6 @@ module axis_daq #
   reg bram_wr_reg;
 
   reg signed [15:0] daq_threshold_reg;
-  reg [BRAM_ADDR_WIDTH-2:0] daq_pretrigger_reg;
   reg [BRAM_ADDR_WIDTH-1:0] cnt_samples;
 
 
@@ -72,7 +69,6 @@ module axis_daq #
   reg daq_full_reg;
   reg rst_cnt_samples;
   reg en_cnt_samples;
-  reg pretriger_done_reg;
 
   wire daq_enable;
   wire signed [15:0] s_axis_tdata_i;
@@ -94,7 +90,8 @@ module axis_daq #
   assign bram_porta_we = bram_wr_reg;
 
   // internal assignments
-  assign daq_enable = daq_control[0];
+  //assign daq_enable = daq_control[0];
+  assign daq_enable = meas_flag_i;
   assign s_axis_tdata_i = s_axis_tdata[15:0];
 
 //------------------------------------------------------------------------------
@@ -119,13 +116,7 @@ module axis_daq #
     case(st_reg)
       // ARM must activate DAQ by writing '1' to daq_control[0]
       st_idle: if(daq_enable == 1'b1)
-                  st_reg_next <= st_pretrigger;
-      // wait until pretrigger data are buffered
-      st_pretrigger: if(pretriger_done_reg == 1'b1)
-                        st_reg_next <= st_wait_for_trigger;
-      // wait for trigger event
-      st_wait_for_trigger: if(meas_flag_i == 1'b1)
-                              st_reg_next <= st_triggered;
+                  st_reg_next <= st_triggered;
       // fill the whole buffer
       st_triggered: if(daq_full_reg == 1'b1)
                        st_reg_next <= st_done;
@@ -143,7 +134,6 @@ module axis_daq #
       en_cnt_samples          <=  1'b0;
       daq_done_reg            <=  1'b0;
       daq_threshold_reg       <= 16'b0;
-      daq_pretrigger_reg      <= 15'b0;
     end
 
     else begin
@@ -159,14 +149,7 @@ module axis_daq #
         if (daq_enable == 1'b1)
           // latch trigger threshold value
           daq_threshold_reg  <= daq_control[31:16];
-          daq_pretrigger_reg <= daq_control[15:1];
         end
-
-        st_pretrigger:
-          en_cnt_samples <= 1'b1;
-
-        st_wait_for_trigger:
-          en_cnt_samples <= 1'b0;
 
         st_triggered:
           en_cnt_samples <= 1'b1;
@@ -187,7 +170,7 @@ module axis_daq #
 
   always @(posedge aclk)
   begin
-    if (~aresetn)
+    if (~aresetn || (st_reg == st_idle))
       bram_addr_reg <= 1'b0;
     else
       if (s_axis_tvalid == 1'b1)
@@ -207,20 +190,10 @@ module axis_daq #
     case(st_reg)
       st_idle: bram_wr_reg <= 1'b0;
 
-      st_pretrigger: if (s_axis_tvalid == 1'b1) begin
-                      bram_wr_reg <= 1'b1;
-                      bram_data_reg <= s_axis_tdata_i;
-                     end
-
-      st_wait_for_trigger:  if (s_axis_tvalid == 1'b1) begin
-                              bram_wr_reg <= 1'b1;
-                              bram_data_reg <= s_axis_tdata_i;
-                            end
-
       st_triggered: if (s_axis_tvalid == 1'b1) begin
-                      if (daq_full_reg == 1'b1) begin
+                      if (~daq_enable) begin
                         bram_wr_reg <= 1'b1;
-                        bram_data_reg <= C_delimiter;   // mark last position in the buffer
+                        bram_data_reg <= C_delimiter;   // mark end of the sequence
                       end
                       else begin
                         bram_wr_reg <= 1'b1;
@@ -234,24 +207,18 @@ module axis_daq #
 
 
 //------------------------------------------------------------------------------
-// sample counter, pretrigger, buffer full
+// sample counter, buffer full
 //------------------------------------------------------------------------------
 
   always @(posedge aclk)
   begin
     if (~aresetn) begin // synchronous reset
       cnt_samples        <= 1'b0;
-      pretriger_done_reg <= 1'b0;
       daq_full_reg       <= 1'b0;
     end
     else begin
       // Default assignment
-      pretriger_done_reg <= 1'b0;
       daq_full_reg       <= 1'b0;
-
-      // pretrigger buffer level reached
-      if (cnt_samples == daq_pretrigger_reg)
-        pretriger_done_reg <= 1'b1;
 
       // counter reset
       if (rst_cnt_samples == 1'b1)
