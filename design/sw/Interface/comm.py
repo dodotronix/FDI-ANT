@@ -36,8 +36,9 @@ class Comm():
     def get_data(self):
         if(self.delimiter in self.block):
             data = self.block[0:self.block.index(self.delimiter)]
+            data = list(map(int, self.decode(data)))
             self.block = self.block[self.block.index(self.delimiter)+1:-1]
-            return list(map(int, self.decode(data))) 
+            return data
 
     def send(self, data):
         self.socket.write(bytearray( data, 'utf-8' ))

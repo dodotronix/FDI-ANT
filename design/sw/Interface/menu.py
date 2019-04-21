@@ -31,7 +31,7 @@ class Menu(QObject):
         self.stored = '--'
         self.data = []
         self.cal_data = []
-        self.refl_data = []
+        self.refl_data =[]
         self.comm = comm
         self.app = app
         self.create()
@@ -68,23 +68,29 @@ class Menu(QObject):
                      'Measure'     :  self.measure_opt,
                      'Chart'       :  self.plot,
                      'Save data'   :  self.save_data,
+                     'Load data'   :  self.load,
                      'Quit'        :  self.quit}
 
     def calibration(self): 
         print("Please match your transmission line and press Enter")
         sys.stdin.readline()
         self.status = 1
+        tmp = self.repeat
+        self.repeat = 1
+        self.send_setup()
+        self.repeat = tmp
         self.measure()
+        self.send_setup()
 
     def setup(self):
         print("\nSet bitrate [MHz]\n", end='')
-        self.bitrate = sys.stdin.readline().rstrip()
+        self.bitrate = int(sys.stdin.readline().rstrip())
         print("\nSet order (6-13)\n", end='')
-        self.order = sys.stdin.readline().rstrip()
-        print("\nSet repetition (0-7)\n", end='')
-        self.repeat = sys.stdin.readline().rstrip()
+        self.order = int(sys.stdin.readline().rstrip())
         self.meas_stat = '--'
         self.cal_stat = '--'
+        self.cal_data = []
+        self.refl_data = []
         self.stored = '--'
         self.send_setup()
         self.display()
@@ -98,21 +104,27 @@ class Menu(QObject):
         packet = '{0}\n'.format(str(2))
         self.comm.send(packet)
 
-    def measure_opt(self):
+    def measure_opt(self): # menu option
         self.status = 2
         self.measure()
 
     def plot(self):
-        self.module = DiagMod(self.cal_data, self.refl_data)
         self.module.signal_chart()
-        # self.module.xcorr_chart()
+        self.module.xcorr_chart()
         plot.show(block=True)
 
     def save_data(self):
-        np.savetxt("reference_sig.txt", self.cal_data, '%u')
-        np.savetxt("reflected_sig.txt", self.refl_data, '%u')
+        np.savetxt("reference_sig.txt", self.module.reference, '%f')
+        np.savetxt("reflected_sig.txt", self.module.reflected, '%f')
         self.stored = 'Done'
         self.display()
+
+    def load(self):
+        self.cal_data = list(np.loadtxt("reference_sig.txt", delimiter='\n'))
+        self.refl_data = list(np.loadtxt("reflected_sig.txt", delimiter='\n'))
+        self.module = DiagMod(self.cal_data, self.refl_data, 9, 20)
+        # sem prijdou vyhodnoceni (jen pro test)
+        self.cable_len = self.module.get_cable_len()
 
     def quit(self):
         self.comm.disconnect()
@@ -123,15 +135,15 @@ class Menu(QObject):
         self.data = self.comm.get_data()
         if(self.data): 
             if(self.status == 1):
-                print('kalibrace')
+                print('Calibration ...')
                 self.cal_data = self.data
                 self.cal_stat = 'Done'
             elif(self.status == 2):
-                print('mereni')
+                print('Measuring ...')
                 self.refl_data = self.data
                 self.meas_stat = 'Done'
-                # self.cable_len = self.module.get_cable_len()
-                #oriznuti na potrebnou velikost
+            self.module = DiagMod(self.cal_data, self.refl_data, self.order, self.bitrate)
+            self.cable_len = self.module.get_cable_len()
             self.status = 0
             self.data = [] #clear buffer
             # self.display()
@@ -154,5 +166,5 @@ class Menu(QObject):
         
         if(option >= 0 and option < len(self.menu)):
             list(self.menu.values())[option]()
-
+        
 #------------------------------------------------------------------------------#
