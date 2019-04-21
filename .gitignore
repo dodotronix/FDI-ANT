@@ -6,5 +6,6 @@ octave-workspace
 *.log
 *.str
 *.o
+*.pyc
 design/hw/RedPitaya/tmp
 design/hw/RedPitaya/.Xil
