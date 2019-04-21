@@ -20,7 +20,7 @@ bw_dac    =  50e6;   % dac bandwidth [Hz]
 range_adc =  1;      % adc voltage range [V]
 cable_len =  25;     % length of cable [m]
 cable_att =  9;      % cable attenuation [dB/100m]
-SNR       =  40;     % Signal noise ratio [-]
+SNR       =  50;     % Signal noise ratio [-]
 amp       =  1;      % signal stimulus amplitude [V]
 
 % constants
@@ -29,7 +29,6 @@ v_factor = 0.695;
 th = 600;
 
 fs = [fs_dac:50e6:1e9]; 
-rlen = 5; % relative delay
 
 %------------------------------------------------------------------------------%
 %% Generate PRBS (Stimulus)
@@ -44,26 +43,32 @@ delay = cable_len/(v_c*v_factor);
 for i = 1:length(fs)
   % calculate analog sampling frequency
   fs_analog =  20*lcm(fs(i), bitrate);  
+  worst = [];
+  worst1 = [];
 
-  % delay and length setup
-  del_set = round(delay*fs(i))/fs(i)+rlen/fs_analog;
-  len_set = v_c*v_factor*del_set;
-  
-  % get correlation function
-  [xc, xd] = fdi_module(S, len_set, cable_att, fs(i), bw_dac,
-  range_adc, res_adc, bitrate,  SNR, term='Open', del_set);
+  for n = 1:20
+    % delay and length setup
+    del_set = round(delay*fs(i))/fs(i)+n/fs_analog;
+    len_set = v_c*v_factor*del_set;
+    
+    % get correlation function
+    [xc, xd] = fdi_module(S, len_set, cable_att, fs(i), bw_dac,
+    range_adc, res_adc, bitrate,  SNR, term='Open', del_set);
 
-  % meas peaks - raw
-  [~, xpos] = get_position(xc, xd, th, 'none');
-  len_meas = xpos(2)-xpos(1);
-  delta = (len_set-len_meas);
-  result = [result, delta];
+    % meas peaks - raw
+    [~, xpos] = get_position(xc, xd, th, 'none');
+    len_meas = xpos(2)-xpos(1);
+    delta = (len_set-len_meas);
+    worst = [worst, delta];
 
-  % meas peaks - interpolation
-  [~, xpos] = get_position(xc, xd, th, 'hyper');
-  len_meas = xpos(2)-xpos(1);
-  delta = (len_set-len_meas);
-  result1 = [result1, delta];
+    % meas peaks - interpolation
+    [~, xpos] = get_position(xc, xd, th, 'hyper');
+    len_meas = xpos(2)-xpos(1);
+    delta = (len_set-len_meas);
+    worst1 = [worst1, delta];
+  end
+  result = [result, max(worst)];
+  result1 = [result1, max(worst1)];
 end
 
 %------------------------------------------------------------------------------%
@@ -87,14 +92,14 @@ set (h, "fontsize", 16);
 
 %------------------------------------------------------------------------------%
 %% plot exporting setups
-target = '../../../doc/outputs/sim/';
-name = 'accuracy_int.tex';
-name_inc = 'accuracy_int-inc.eps';
+%target = '../../../doc/outputs/sim/';
+%name = 'accuracy_int.tex';
+%name_inc = 'accuracy_int-inc.eps';
 
-print(name, '-dtex');
+%print(name, '-dtex');
 
-path = strcat(target, name);
-path_inc = strcat(target, name_inc);
+%path = strcat(target, name);
+%path_inc = strcat(target, name_inc);
 
-movefile(name, path);
-movefile(name_inc, path_inc);
+%movefile(name, path);
+%movefile(name_inc, path_inc);

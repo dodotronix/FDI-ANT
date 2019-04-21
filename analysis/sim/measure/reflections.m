@@ -27,6 +27,13 @@ amp       =  0.5;      % signal stimulus amplitude [V]
 % antenna measured s11
 s11 = '../antenna/VNA/K8.dat';
 
+v_c = 3e8;
+v_factor = 0.695;
+
+delay = cable_len/(v_c*v_factor);
+d = round(delay*fs_dac)/fs_dac;
+cable_len = v_c*v_factor*d;
+
 %% Generate PRBS (Stimulus)
 S = amp*prbs_gen(order);
 
