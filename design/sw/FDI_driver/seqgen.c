@@ -52,7 +52,7 @@ static uint32_t coder(uint8_t bitrate, uint8_t repeat, uint8_t order)
 /*
  * Initialize sequence generator
 */
-int sg_init(volatile uint32_t **control_reg)
+int sg_init(uint32_t **control_reg)
 {
   int fd;
   if((fd = open("/dev/mem", O_RDWR)) < 0) {
@@ -70,7 +70,7 @@ int sg_init(volatile uint32_t **control_reg)
 /*
  * sequence generator setup
 */
-void sg_setup(volatile uint32_t *control_reg, uint8_t bitrate, uint8_t repeat, uint8_t order)
+void sg_setup(uint32_t *control_reg, uint8_t bitrate, uint8_t repeat, uint8_t order)
 {
   uint32_t result = coder(bitrate, repeat, order);
   WRITE_REG(control_reg, result); 
@@ -79,7 +79,7 @@ void sg_setup(volatile uint32_t *control_reg, uint8_t bitrate, uint8_t repeat, u
 /*
  * launch sequence generator
 */
-void sg_start(volatile uint32_t *control_reg)
+void sg_start(uint32_t *control_reg)
 {
   SET_BIT(control_reg, SEQENA_Msk);
   usleep(4);
@@ -89,7 +89,7 @@ void sg_start(volatile uint32_t *control_reg)
 /*
  * reset sequence generator
 */
-void sg_reset(volatile uint32_t *control_reg)
+void sg_reset(uint32_t *control_reg)
 {
   SET_BIT(control_reg, SEQRST_Msk);
   usleep(4);

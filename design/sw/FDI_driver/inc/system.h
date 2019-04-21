@@ -22,6 +22,6 @@
 #define READ_BIT(REG, BIT)   (*(REG) &   (BIT))
 #define CLEAR_REG(REG)       (*(REG) =   (0x0))
 #define READ_REG(REG)        (*(REG)          )
-#define IS_BIT_SET(REG, BIT) ((*(REG) &  (BIT)) == 0)
+#define IS_BIT_CLEAR(REG, BIT) ((*(REG) &  (BIT)) == 0)
 
 #endif //SYSTEM_H

@@ -35,9 +35,9 @@
 /*------------------------------------------------------------------------------
 -- Externs
 ------------------------------------------------------------------------------*/
-extern int sg_init(volatile uint32_t **control_reg);
-extern void sg_setup(volatile uint32_t *control_reg, uint8_t bitrate, uint8_t repeat, uint8_t order);
-extern void sg_start(volatile uint32_t *control_reg);
-extern void sg_reset(volatile uint32_t *control_reg);
+extern int sg_init(uint32_t **control_reg);
+extern void sg_setup(uint32_t *control_reg, uint8_t bitrate, uint8_t repeat, uint8_t order);
+extern void sg_start(uint32_t *control_reg);
+extern void sg_reset(uint32_t *control_reg);
 
 #endif //SEQGEN_H

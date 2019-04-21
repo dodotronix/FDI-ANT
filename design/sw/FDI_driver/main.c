@@ -30,21 +30,19 @@
 /*------------------------------------------------------------------------------
 -- Registers
 ------------------------------------------------------------------------------*/
-volatile uint32_t *seqgen_ctrl;
-volatile uint32_t *daq_ctrl;
-volatile uint32_t *daq_stat;
-volatile uint16_t *daq_memory;
+uint32_t *seqgen_ctrl;
+uint32_t *daq_stat;
+uint32_t *daq_memory;
 
 int sock_server, sock_client, rx;
 char data[DATA_LENGTH];
-int values[4]; //cmd, bitrate, order, repeat
-char to_send[20*BUFFER_SIZE]; //maximum number size in chars (5)
+char to_send[200*BUFFER_SIZE]; //maximum number size in chars (5)
 
 /*------------------------------------------------------------------------------
 -- Functions
 ------------------------------------------------------------------------------*/
 
-void get_numbers(char *data, int len, int *values)
+int get_numbers(char *data, int len, int *values, int number)
 {
   char str[8];
   memset(str, 0, 8);
@@ -52,6 +50,9 @@ void get_numbers(char *data, int len, int *values)
   uint8_t pos = 0;
 
   for(int i=0; i<len; ++i){
+    if((number-pos) == 0)
+      return i;
+
     str[i-offset] = data[i];
     if(data[i] == '\n'){
       values[pos] = atoi(str);
@@ -60,32 +61,31 @@ void get_numbers(char *data, int len, int *values)
       ++pos;
     }
   }
+  return len;
 }
 
-void actions(int *sock_client, char *data, int got, int *values)
+void actions(int *sock_client, char *data, int got)
 {
-  //get numbers from TCP buffer
-  get_numbers(data, got, values);
+  for(int i=0; i<got;){
+    int values[3] = {0, 0, 0}; //cmd, bitrate, order, repeat
 
-  switch(values[0]){
-    case 1 :
-      printf("Sequence setup ...\n");
-      sg_setup(seqgen_ctrl, values[1], values[3], values[2]); //[bitrate, repeat, order]
-      break;
-    case 2 : 
-      printf("Measuring signal ...\n");
+    //get numbers from TCP buffer
+    i += get_numbers(data+i, got-i, values, 1);
+   
+    switch(values[0]){
+      case 1 :
+        printf("Sequence setup ...\n");
+        i += get_numbers(data+i, got-i, values, 3);
+        sg_setup(seqgen_ctrl, values[0], values[2], values[1]); //[bitrate, repeat, order]
+        break;
+      case 2 : 
+        printf("Measuring signal ...\n");
+        sg_start(seqgen_ctrl);
+        usleep(100000);
 
-      //activate DAQ @ Sequence generator
-      daq_start(daq_ctrl);
-      usleep(100);
-      sg_start(seqgen_ctrl);
-
-      //wait for daq flag
-      while(IS_BIT_SET(daq_stat, DAQ_DONE_Msk));
-
-      // read memory
-      read_daq(daq_memory, to_send);
-      put_data(sock_client, to_send, 20*BUFFER_SIZE);
+        read_daq(daq_memory, to_send);
+        put_data(sock_client, to_send, 200*BUFFER_SIZE);
+    }
   }
 }
 
@@ -98,7 +98,7 @@ void control_device(int *sock_client)
     rx = get_data(sock_client, data, DATA_LENGTH);
 
     if(rx > 0)
-      actions(sock_client, data, rx, values);
+      actions(sock_client, data, rx);
 
     else if (errno == 0)
       break;
@@ -110,9 +110,9 @@ void control_device(int *sock_client)
 ------------------------------------------------------------------------------*/
 int main(void)
 {
-  //Initialize
+  //Initialize 
   sg_init(&seqgen_ctrl);
-  daq_init(&daq_ctrl, &daq_stat, &daq_memory);
+  daq_init(&daq_stat, &daq_memory);
   server_init(&sock_server);
 
   while(1){

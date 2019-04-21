@@ -30,7 +30,7 @@
 /*
  * DAQ initialization 
 */
-int daq_init(volatile uint32_t **daq_ctrl, volatile  uint32_t **daq_stat, volatile uint16_t **daq_memory)
+int daq_init(uint32_t **daq_stat, uint32_t **daq_memory)
 {
   int fd;
   if((fd = open("/dev/mem", O_RDWR)) < 0) {
@@ -38,8 +38,8 @@ int daq_init(volatile uint32_t **daq_ctrl, volatile  uint32_t **daq_stat, volati
     return EXIT_FAILURE;
   }
 
-  *daq_ctrl = mmap(NULL, sysconf(_SC_PAGESIZE), PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0x42000000); 
-  *daq_stat = *daq_ctrl + 2;
+  *daq_stat = mmap(NULL, sysconf(_SC_PAGESIZE), PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0x42000000); 
+  *daq_stat = *daq_stat + 2;
   *daq_memory = mmap(NULL, BUFFER_SIZE*4, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0x40000000);
 
   return 0;
@@ -48,25 +48,19 @@ int daq_init(volatile uint32_t **daq_ctrl, volatile  uint32_t **daq_stat, volati
 /*
  * read data from memory to file
 */
-void read_daq(volatile uint16_t *memory, char *to_send)
+void read_daq(uint32_t *memory, char *to_send)
 {
-  uint16_t buffer[BUFFER_SIZE];
-  memset(to_send, 0, 20*BUFFER_SIZE);
+  int32_t buffer[BUFFER_SIZE];
+  memset(to_send, 0, 200*BUFFER_SIZE);
   int n = 0;
 
   for(int i=0; i<BUFFER_SIZE; ++i){ 
-    buffer[i] = (READ_REG(memory + 2*i));
-    n += snprintf(to_send + n, 20, "%u\n", buffer[i]);
+    buffer[i] = (READ_REG(memory + i));
+
+    //32-bit number consist of two 16-bit values
+    n += snprintf(to_send + n, 50, "%i\n", buffer[i] >> 16);
+    n += snprintf(to_send + n, 50, "%i\n", (int16_t)buffer[i]);
   }
 
   snprintf(to_send + n, 6, "%c", 'x');
-}
-
-/*
- * activate DAQ
-*/
-void daq_start(volatile uint32_t *control_reg)
-{
- CLEAR_BIT(control_reg, DAQ_ENA_Msk);
- SET_BIT(control_reg, DAQ_ENA_Msk);
 }
