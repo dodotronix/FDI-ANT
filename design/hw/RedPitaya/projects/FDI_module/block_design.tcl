@@ -28,6 +28,8 @@ endgroup
 # AXI BRAM Reader
 startgroup
 create_bd_cell -type ip -vlnv anton-potocnik:user:axi_bram_reader axi_bram_reader_0
+set_property -dict [list CONFIG.BRAM_ADDR_WIDTH {16} CONFIG.C_S00_AXI_ADDR_WIDTH {18}] [get_bd_cells axi_bram_reader_0]
+set_property -dict [list CONFIG.FREQ_HZ {125000000} CONFIG.CLK_DOMAIN {system_processing_system7_0_0_FCLK_CLK0}] [get_bd_intf_pins axi_bram_reader_0/S_AXI]
 endgroup
 
 # AXI DAQ
@@ -83,8 +85,14 @@ connect_bd_net [get_bd_pins axi_gpio_1/gpio_io_o] [get_bd_pins axis_red_pitaya_d
 
 # 3th AXI master @ GPIO_1
 connect_bd_intf_net [get_bd_intf_pins ps7_0_axi_periph/M02_AXI] [get_bd_intf_pins axi_gpio_1/S_AXI]
+<<<<<<< HEAD
 
 # add M02 clock connect
+=======
+connect_bd_net [get_bd_pins ps7_0_axi_periph/M02_ARESETN] [get_bd_pins rst_ps7_0_125M/peripheral_aresetn]
+connect_bd_net [get_bd_pins ps7_0_axi_periph/M02_ACLK] [get_bd_pins processing_system7_0/FCLK_CLK0]
+
+>>>>>>> a5d9a29b9c97f5fa6a1dd5833d7549a86b61fed0
 #-------------------------------------------------------------------------------
 # Hierarchies
 #-------------------------------------------------------------------------------
