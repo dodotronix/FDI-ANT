@@ -16,26 +16,32 @@ phase  = s11(:, 3);
 % subplot 1
 figure(1)
 subplot(2,1,1)
-plot(freq, module, 'linewidth', 3)
-ylabel('{\Large S11 [dB]}')
-xlabel('{\Large Frekvence [MHz]}')
+plot(freq, module, 'linewidth', 2)
+ylabel('{S11 [dB]}')
+xlabel('{Frekvence [MHz]}')
 grid on
 
 orient('landscape')
-h=get(gcf, "currentaxes");
-set(h, "fontsize", 16);
+set(gca, 'fontsize', 20,...
+    'gridlinestyle', '--',... 
+    'linewidth', 1,...
+    'xtick', [0:50:500],...
+    'ytick', [-40:10:0]);
 
 % subplot 2
 subplot(2,1,2)
-plot(freq, phase,'r', 'linewidth', 3)
+plot(freq, phase,'r', 'linewidth', 2)
 ylim([-180, 180])
-ylabel('{\Large fáze [$^\circ$]}')
-xlabel('{\Large Frekvence [MHz]}')
+ylabel('{Fáze [$^\circ$]}')
+xlabel('{Frekvence [MHz]}')
 grid on
 
 orient('landscape')
-h=get(gcf, "currentaxes");
-set(h, "fontsize", 16);
+set(gca, 'fontsize', 20,...
+    'gridlinestyle', '--',... 
+    'linewidth', 1,...
+    'xtick', [0:50:500],...
+    'ytick', [-180:90:180]);
 
 %------------------------------------------------------------------------------%
 %% plot exporting setups

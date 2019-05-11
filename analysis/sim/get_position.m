@@ -21,8 +21,8 @@
 function [y, x] = get_position(signal_in, d, th, en)
   if(strcmp(en, 'none') || strcmp(en, 'hyper'))
     order = 2;
-    right = ceil(order/2);
-    left = ceil(order/2);
+    right = 1;
+    left = 1;
 
     [py, px] = findpeaks(signal_in,'DoubleSided','MinPeakHeight', th);
     y = py;

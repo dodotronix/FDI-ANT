@@ -13,8 +13,8 @@ pkg load ltfat
 %------------------------------------------------------------------------------%
 %% Module setups
 
-order     =  8;      % order of the PN - sequence [-]
-res_adc   =  8;      % adc resolution [b]
+order     =  9;      % order of the PN - sequence [-]
+res_adc   =  14;      % adc resolution [b]
 fs_dac    =  125e6;  % adc (dac) sampling frequency [Hz]
 bitrate   =  25e6;   % [b/s]
 bw_dac    =  50e6;   % dac bandwidth [Hz]
@@ -53,7 +53,7 @@ S = amp*prbs_gen(order);
 %------------------------------------------------------------------------------%
 %% estimate peak positions
 a = power(amp,2)*(power(2, order)-2)*fs_dac/bitrate;
-d_aprox = xd_open(10:75);
+d_aprox = xd_open(10:75)
 g = power(10, d_aprox*-cable_att/1000);
 y = a*g;
 
@@ -63,11 +63,11 @@ y = a*g;
 figure(1)
 plot(d_aprox, y, 'k--', 'linewidth', 1)
 hold on
-plot(xd_short, xc_short, '-', 'linewidth', 3)
+plot(xd_short, xc_short, '-', 'linewidth', 2)
 hold on
-plot(xd_open, xc_open, '-.', 'linewidth', 3)
+plot(xd_open, xc_open, '-.', 'linewidth', 2)
 hold on
-plot(xd_ant, xc_ant, '-', 'linewidth', 3)
+plot(xd_ant, xc_ant, '-', 'linewidth', 2)
 hold on
 plot(d_aprox, -y, 'k--', 'linewidth', 1)
 xlim([-10, 80])
@@ -82,19 +82,24 @@ h = legend({'   teoretický odhad',...
             '   vedení naprázdno',... 
             '   anténa'},'Location','northeast');
 
-set (h, 'fontsize', 19, 'position', [0.65,0.70,0.25,0.22]);
-set(gca, 'fontsize', 19);
+set (h, 'fontsize', 20, 'position', [0.65,0.70,0.25,0.22]);
+set(gca, 'fontsize', 20,...
+    'gridlinestyle', '--',... 
+    'linewidth', 1,...
+    'ylim', [-700, 700],...
+    'xtick', [-10:10:80],...
+    'ytick', [-700:140:700]);
 grid on
 
 %% Generate Latex
-%target = '../../../doc/outputs/sim/'
-%name = 'reflections.tex'
-%name_inc = 'reflections-inc.eps'
+target = '../../../doc/outputs/sim/'
+name = 'reflections.tex'
+name_inc = 'reflections-inc.eps'
 
-%print(name, '-dtex');
+print(name, '-dtex');
 
-%path = strcat(target, name);
-%path_inc = strcat(target, name_inc);
+path = strcat(target, name);
+path_inc = strcat(target, name_inc);
 
-%movefile(name, path);
-%movefile(name_inc, path_inc);
+movefile(name, path);
+movefile(name_inc, path_inc);

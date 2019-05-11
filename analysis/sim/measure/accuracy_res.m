@@ -20,7 +20,7 @@ bw_dac    =  50e6;   % dac bandwidth [Hz]
 range_adc =  1;      % adc voltage range [V]
 cable_len =  25;     % length of cable [m]
 cable_att =  9;      % cable attenuation [dB/100m]
-SNR       =  50;     % Signal noise ratio [-]
+SNR       =  10000;     % Signal noise ratio [-]
 amp       =  1;      % signal stimulus amplitude [V]
 
 % constants
@@ -28,9 +28,8 @@ v_c = 3e8;
 v_factor = 0.695;
 th = 600;
 
-fs = [fs_dac:50e6:1e9]; 
+fs = [fs_dac:50e6:500e6]; 
 res = [4, 8, 14]; % ADC / DAC resolutions
-rlen = 5; % relative delay
 
 %------------------------------------------------------------------------------%
 %% Generate PRBS (Stimulus)
@@ -38,38 +37,33 @@ S = amp*prbs_gen(order);
 
 %------------------------------------------------------------------------------%
 %% Measure influence of wave delay
-result = [];
 result1 = [];
-delay = cable_len/(v_c*v_factor);
-
-for n = 1:length(res)
-  y = [];
+for a = 1:length(res)
   y1 = [];
+  delay = cable_len/(v_c*v_factor);
+
   for i = 1:length(fs)
     % calculate analog sampling frequency
-    fs_analog =  20*lcm(fs(i), bitrate);  
+    fs_analog =  10*lcm(fs(i), bitrate);  
+    worst1 = [];
 
-    % delay and length setup
-    del_set = round(delay*fs(i))/fs(i)+rlen/fs_analog;
-    len_set = v_c*v_factor*del_set;
-    
-    % get correlation function
-    [xc, xd] = fdi_module(S, len_set, cable_att, fs(i), bw_dac,
-    range_adc, res(n), bitrate,  SNR, term='Open', del_set);
+    for n = 1:10
+      % delay and length setup
+      del_set = round(delay*fs(i))/fs(i)+n/fs_analog;
+      len_set = v_c*v_factor*del_set;
+      
+      % get correlation function
+      [xc, xd] = fdi_module(S, len_set, cable_att, fs(i), bw_dac,
+      range_adc, res(a), bitrate,  SNR, term='Open', del_set);
 
-    % meas peaks - raw
-    [~, xpos] = get_position(xc, xd, th, 'none');
-    len_meas = xpos(2)-xpos(1);
-    delta = (len_set-len_meas);
-    y = [y, delta];
-
-    % meas peaks - interpolation
-    [~, xpos] = get_position(xc, xd, th, 'hyper');
-    len_meas = xpos(2)-xpos(1);
-    delta = (len_set-len_meas);
-    y1 = [y1, delta];
+      % meas peaks - interpolation
+      [~, xpos] = get_position(xc, xd, th, 'hyper');
+      len_meas = xpos(2)-xpos(1);
+      delta = abs(len_set-len_meas);
+      worst1 = [worst1, delta];
+    end
+    y1 = [y1, max(worst1)];
   end
-  result = [result; y];
   result1 = [result1; y1];
 end
 
@@ -78,26 +72,25 @@ end
 
 figure(1)
 fs = fs*1e-6;
-%plot(fs, result(1, :), '--', 'linewidth', 2)
-%hold on 
-%plot(fs, result(2, :), '--', 'linewidth', 2)
-%hold on 
-%plot(fs, result(3, :), '--', 'linewidth', 2)
-%hold on 
-plot(fs, result1(1, :), '--', 'linewidth', 2)
+plot(fs, result1(1, :), '-o', 'linewidth', 2)
 hold on 
 plot(fs, result1(2, :), '-o', 'linewidth', 2)
 hold on 
-plot(fs, result1(3, :), '-*', 'linewidth', 2)
+plot(fs, result1(3, :), '-o', 'linewidth', 2)
 xlim([fs(1), fs(end)])
+ylim([0, 0.07])
 
-ylabel('{\Large Odchylka vzdálenosti [m]}')
-xlabel('{\Large Vzorkovací frekvence [MHz]}')
+ylabel('{Odchylka vzdálenosti [m]}')
+xlabel('{Vzorkovací frekvence [MHz]}')
 grid on
 
 orient('landscape')
-h = legend({'rozlišení 4 bity', 'rozlišení 8 bitů', 'rozlišení 14 bitů'},'Location','northeast');
-set (h, "fontsize", 16);
+h = legend({'  rozlišení 4 bity',...
+            '  rozlišení 8 bitů',...
+            '  rozlišení 14 bitů'},'Location','northeast');
+
+set (h, 'fontsize', 20, 'position', [0.65,0.72,0.25,0.2]);
+set(gca, 'fontsize', 20);
 
 %------------------------------------------------------------------------------%
 %% plot exporting setups

@@ -22,6 +22,6 @@
 
 function signal_out = cable(signal_in, fs, delay)
   % shift signal right
-  offset = 2*delay*fs;
+  offset = ceil(2*delay*fs);
   signal_out = [zeros(1, offset), signal_in(1:end-offset)];
 endfunction

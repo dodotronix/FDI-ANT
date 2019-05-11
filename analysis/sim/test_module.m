@@ -34,9 +34,9 @@
 %  pkg load ltfat
 %
 
-function [xc, xd] = fdi_module(waveform, 
+function [xc, xd] = test_module(waveform, 
                                cable_len, 
-                               cable_att=9, 
+                               cable_att=0, 
                                fs_dac=125e6, 
                                dac_bw=50e6, 
                                range_adc=1,
@@ -67,68 +67,37 @@ function [xc, xd] = fdi_module(waveform,
   % DAC output signal
   Tx_data = sampler(S2, bitrate, fs_dac);
 
-  % DAC output filter
+  %% DAC output filter
   Tx_data_filter = lpfio(Tx_data, fs_dac, dac_bw);
 
   % DAC output signal (analog)
-  Tx_signal_dac = resample(Tx_data_filter, fs_analog, fs_adc);
-
-  % noise on output DAC
-  Tx_signal_dac_noise = awgn(Tx_signal_dac, SNR, 'measured');
+  Tx_signal_dac = sampler(Tx_data_filter, fs_adc, fs_analog);
 
   %----------------------------------------------------------------------------%
   %% Cable 
 
-  if(exist(term, 'file'))
-    
-    %--------------------------------------------------------------------------%
-    %% Antenna 
+  % signal delay
+  Rx_signal_shifted = cable(Tx_signal_dac, fs_analog, cable_del);
 
-    % signal delay (function returns fixed cable length)
-    Rx_shifted_ant = cable(Tx_signal_dac_noise, fs_analog, cable_del);
+  % cable attenuation 
+  Rx_signal = attenua(Rx_signal_shifted, 2*cable_len, cable_att);
 
-    % cable attenuation (forward)
-    Tx_cable_ant = attenua(Rx_shifted_ant, cable_len, cable_att);
-
-    % reflected signal from antenna
-    Rx_cable_ant = antenna(Tx_cable_ant, fs_analog, term, imp);
-
-    % cable attenuation (backward)
-    Rx_signal = attenua(Rx_cable_ant, cable_len, cable_att);
-
-  elseif(strcmp(term, 'Open') || strcmp(term, 'Short'))
-    % signal delay
-    Rx_signal_shifted = cable(Tx_signal_dac_noise, fs_analog, cable_del);
-
-    if(strcmp(term, 'Short'))
-      Rx_signal_shifted = -Rx_signal_shifted;
-    end
-
-    % cable attenuation 
-    Rx_signal = attenua(Rx_signal_shifted, 2*cable_len, cable_att);
-  end
   % Cable signal shift + reference signal (termination - open)
-  Rx_signal_complet = Rx_signal + Tx_signal_dac_noise(1:length(Rx_signal)); 
+  Rx_signal_complet = Rx_signal + Tx_signal_dac(1:length(Rx_signal)); 
+
+  figure(2)
+  plot(Rx_signal_complet)
 
   %----------------------------------------------------------------------------%
   %% A/D converter 
 
-  % Quantization
-  adc_max = max(abs(Rx_signal_complet)) / range_adc;
-  Rx_data_quant = uquant(Rx_signal_complet,res_adc, adc_max);
-
   % ADC output
-  Rx_data_adc = sampler(Rx_data_quant, fs_analog, fs_adc); 
+  Rx_data_adc = sampler(Rx_signal_complet, fs_analog, fs_adc); 
 
   %----------------------------------------------------------------------------%
   %% Reference signal
   Ref_data = sampler(waveform, bitrate, fs_adc);
   Ref_data = lpfio(Ref_data, fs_adc, dac_bw);
-  Ref_data_noise = awgn(Ref_data, 30, 'measured');
-
-  % Quantization
-  adc_max = max(abs(Ref_data_noise)) / range_adc;
-  Ref_data = uquant(Ref_data_noise, res_adc, adc_max);
 
   %----------------------------------------------------------------------------%
   %% Correlator
