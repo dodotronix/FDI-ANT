@@ -17,8 +17,9 @@ if {! [file exists cores]} {
 
 # generate a list of ip cores by looking into the folder
 cd cores
-set core_names [glob -type d *]
+#set core_names [glob -type d *]
 #set core_names {axis_daq_v1_0 axis_red_pitaya_dac_v1_0}
+set core_names {axis_red_pitaya_dac_v1_0}
 cd ..
 
 # generate cores
