@@ -15,7 +15,7 @@ class DiagMod:
     def __init__(self, reference, reflected, order, bitrate):
         self.fsmp = 125e6
         self.uref = 1         #  V
-        self.threshold = 0.4  #  % (from maximal peak hight)
+        self.threshold = 0.01  #  % (from maximal peak hight)
         self.v_c = 3e8        #  m/s
         self.v_factor = 0.695
         self.adc_res = 14     #  bit
@@ -31,7 +31,7 @@ class DiagMod:
         self.convert_real() # convert signals to voltage
         self.filter() # filter data
         self.correlation()
-        self.estimation()
+        # self.estimation()
 
     def convert_real(self):
         uref_step = self.uref/np.power(2, 13)
@@ -74,37 +74,41 @@ class DiagMod:
 
     def xcorr_chart(self):
         plot.figure(2)
-        plot.plot(self.d_aprox, self.estim)
+        # plot.plot(self.d_aprox, self.estim)
         plot.plot(self.xdist, self.xcorr)
         plot.ylabel("Correlation amplitude")
         plot.xlabel("Distance [m]")
-        plot.xlim(-50, 100)
+        plot.xlim(-50, 200)
         plot.grid()
 
     def get_cable_len(self):
         if(list(self.reflected) and list(self.reflected)):
             theor_peak = np.power(self.amp, 2)*(np.power(2, self.order)-2)*self.fsmp/self.bitrate
+            
+            # find positive and negative peaks
+            th = self.threshold*theor_peak
+            self.peaks, _ = signal.find_peaks(abs(self.xcorr), height=th)
+            return self.xdist[self.peaks]
 
-            self.peaks, _ = signal.find_peaks(self.xcorr, self.threshold*theor_peak)
-            self.peak_widths = signal.peak_widths(self.xcorr, self.peaks, rel_height=0.9)[0]
-            self.interpol2()
+            # self.peak_widths = signal.peak_widths(self.xcorr, self.peaks, rel_height=0.9)[0]
+            # self.interpol2()
 
-            bitw_m = (1/self.bitrate)*self.v_c*self.v_factor
-            w_bound_up = (1 + self.allowance)*bitw_m
-            peak_h = self.xcorr[self.peaks[0]]
+            # bitw_m = (1/self.bitrate)*self.v_c*self.v_factor
+            # w_bound_up = (1 + self.allowance)*bitw_m
+            # peak_h = self.xcorr[self.peaks[0]]
 
-            if(len(self.peaks) > 1):
-                return "{0:.2f}".format(self.int_x[1]-self.int_x[0])
+            # if(len(self.peaks) > 1):
+                # return "{0:.2f}".format(self.int_x[1]-self.int_x[0])
 
-            # check height of reference peak
-            if(peak_h >= 0.9*theor_peak):
-                print("presalh vysku")
-                return " < {0:.2f}".format(bitw_m/2)
+            # # check height of reference peak
+            # if(peak_h >= 0.9*theor_peak):
+                # print("presalh vysku")
+                # return " < {0:.2f}".format(bitw_m/2)
 
-            # check width of reference peak
-            if(self.peak_widths[0] > w_bound_up):
-                print("presalh sirku")
-                return " < {0:.2f}".format(bitw_m/2)
+            # # check width of reference peak
+            # if(self.peak_widths[0] > w_bound_up):
+                # print("presalh sirku")
+                # return " < {0:.2f}".format(bitw_m/2)
 
 
     def filter(self):
