@@ -36,9 +36,7 @@ uint32_t *daq_memory;
 
 int sock_server, sock_client, rx;
 char data[DATA_LENGTH];
-
-int values[4]; //cmd, bitrate, order, repeat
-char to_send[200*BUFFER_SIZE]; //maximum number size in chars (200)
+char to_send[200*BUFFER_SIZE]; //maximum number size in chars (5)
 
 /*------------------------------------------------------------------------------
 -- Functions
@@ -68,21 +66,26 @@ int get_numbers(char *data, int len, int *values, int number)
 
 void actions(int *sock_client, char *data, int got)
 {
-  //get numbers from TCP buffer
-  get_numbers(data, got, values);
+  for(int i=0; i<got;){
+    int values[3] = {0, 0, 0}; //cmd, bitrate, order, repeat
 
-  switch(values[0]){
-    case 1 :
-      printf("Sequence setup ...\n");
-      sg_setup(seqgen_ctrl, values[1], values[3], values[2]); //[bitrate, repeat, order]
-      break;
-    case 2 : 
-      printf("Measuring signal ...\n");
-      sg_start(seqgen_ctrl);
-      usleep(10000);
+    //get numbers from TCP buffer
+    i += get_numbers(data+i, got-i, values, 1);
+   
+    switch(values[0]){
+      case 1 :
+        printf("Sequence setup ...\n");
+        i += get_numbers(data+i, got-i, values, 3);
+        sg_setup(seqgen_ctrl, values[0], values[2], values[1]); //[bitrate, repeat, order]
+        break;
+      case 2 : 
+        printf("Measuring signal ...\n");
+        sg_start(seqgen_ctrl);
+        usleep(100000);
 
-      read_daq(daq_memory, to_send);
-      put_data(sock_client, to_send, 200*BUFFER_SIZE);
+        read_daq(daq_memory, to_send);
+        put_data(sock_client, to_send, 200*BUFFER_SIZE);
+    }
   }
 }
 
