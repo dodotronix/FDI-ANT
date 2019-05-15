@@ -85,14 +85,11 @@ connect_bd_net [get_bd_pins axi_gpio_1/gpio_io_o] [get_bd_pins axis_red_pitaya_d
 
 # 3th AXI master @ GPIO_1
 connect_bd_intf_net [get_bd_intf_pins ps7_0_axi_periph/M02_AXI] [get_bd_intf_pins axi_gpio_1/S_AXI]
-<<<<<<< HEAD
 
 # add M02 clock connect
-=======
 connect_bd_net [get_bd_pins ps7_0_axi_periph/M02_ARESETN] [get_bd_pins rst_ps7_0_125M/peripheral_aresetn]
 connect_bd_net [get_bd_pins ps7_0_axi_periph/M02_ACLK] [get_bd_pins processing_system7_0/FCLK_CLK0]
 
->>>>>>> a5d9a29b9c97f5fa6a1dd5833d7549a86b61fed0
 #-------------------------------------------------------------------------------
 # Hierarchies
 #-------------------------------------------------------------------------------
