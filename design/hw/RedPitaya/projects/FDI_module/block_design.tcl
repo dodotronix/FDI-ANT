@@ -115,7 +115,7 @@ set_property range 4K [get_bd_addr_segs {PS7/processing_system7_0/Data/SEG_axi_g
 #-------------------------------------------------------------------------------
 
 # connect clock for AXI_M02
-apply_bd_automation -rule xilinx.com:bd_rule:clkrst -config {Clk "/PS7/processing_system7_0/FCLK_CLK0 (125 MHz)" }  [get_bd_pins PS7/ps7_0_axi_periph/M02_ACLK]
+#apply_bd_automation -rule xilinx.com:bd_rule:clkrst -config {Clk "/PS7/processing_system7_0/FCLK_CLK0 (125 MHz)" }  [get_bd_pins PS7/ps7_0_axi_periph/M02_ACLK]
 
 # fancy layout
 regenerate_bd_layout
